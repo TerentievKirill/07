@@ -45,14 +45,35 @@ func mainHandle(w http.ResponseWriter, req *http.Request) {
     w.WriteHeader(http.StatusOK)
     w.Write([]byte(answer))
 }
-
 func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
-    totalCount := 4
-    req := ... // здесь нужно создать запрос к сервису
+    totalCount := 4 
+
+    req, err := http.NewRequest("GET", "/cafe?count=10&city=moscow", nil)
+    require.NoError(t, err)
 
     responseRecorder := httptest.NewRecorder()
     handler := http.HandlerFunc(mainHandle)
     handler.ServeHTTP(responseRecorder, req)
 
-    // здесь нужно добавить необходимые проверки
+    // Проверяем, что код ответа 200
+    require.Equal(t, http.StatusOK, responseRecorder.Code, "Ожидался код 200")
+
+    // Проверяем, что количество кафе в ответе соответствует totalCount
+    cafes := strings.Split(responseRecorder.Body.String(), ",")
+    require.Len(t, cafes, totalCount, "Ожидалось, что в ответе будет 4 кафе")
+}
+
+func TestMainHandlerWhenCityNotSupported(t *testing.T) {
+    req, err := http.NewRequest("GET", "/cafe?count=2&city=unknown", nil)
+    require.NoError(t, err)
+
+    responseRecorder := httptest.NewRecorder()
+    handler := http.HandlerFunc(mainHandle)
+    handler.ServeHTTP(responseRecorder, req)
+
+    // Проверяем, что код ответа 400
+    require.Equal(t, http.StatusBadRequest, responseRecorder.Code, "Ожидался код 400")
+
+    // Проверяем, что сообщение об ошибке корректное
+    require.Equal(t, "wrong city value", responseRecorder.Body.String(), "Ожидалось сообщение 'wrong city value'")
 }
