@@ -4,6 +4,7 @@ import (
     "net/http"
     "net/http/httptest"
     "net/url"
+    "strings"
     "testing"
 
     "github.com/stretchr/testify/assert"
@@ -30,9 +31,7 @@ func TestMainHandler_WrongCity(t *testing.T) {
     assert.Equal(t, "wrong city value", resp.Body.String())
 }
 
-func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
-    totalCount := 4 // Всего 4 кафе в Москве
-
+func TestMainHandlerWhenCountMoreThanTotal_Implemented(t *testing.T) {
     q := url.Values{}
     q.Set("count", "10")
     q.Set("city", "moscow")
@@ -43,17 +42,6 @@ func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
     mainHandle(resp, req)
 
     require.Equal(t, http.StatusOK, resp.Code)
-    result := resp.Body.String()
-
-    cafes := cafeList["moscow"]
-    assert.Len(t, cafes, totalCount)
-    assert.Equal(t, cafes, splitResult(result))
-}
-
-// вспомогательная функция для сравнения списков
-func splitResult(s string) []string {
-    if s == "" {
-        return []string{}
-    }
-    return strings.Split(s, ",")
+    expected := strings.Join(cafeList["moscow"], ",")
+    assert.Equal(t, expected, resp.Body.String())
 }

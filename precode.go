@@ -47,12 +47,18 @@ func mainHandle(w http.ResponseWriter, req *http.Request) {
 }
 
 func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
-    totalCount := 4
-    req := ... // здесь нужно создать запрос к сервису
-
+    req := httptest.NewRequest(http.MethodGet, "/cafe?count=10&city=moscow", nil)
     responseRecorder := httptest.NewRecorder()
     handler := http.HandlerFunc(mainHandle)
     handler.ServeHTTP(responseRecorder, req)
 
-    // здесь нужно добавить необходимые проверки
+    if responseRecorder.Code != http.StatusOK {
+        t.Fatalf("Ожидался код 200, но получен %d", responseRecorder.Code)
+    }
+
+    expected := strings.Join(cafeList["moscow"], ",")
+    result := responseRecorder.Body.String()
+    if result != expected {
+        t.Errorf("неожиданный ответ: %s, ожидался: %s", result, expected)
+    }
 }
